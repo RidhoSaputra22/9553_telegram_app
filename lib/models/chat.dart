@@ -71,7 +71,7 @@ class Chat {
   static Future<void> addChat(String phone, String nama) async {
     final String? userId = await AuthServices.getUserId();
     final response = await http.post(
-      Uri.parse("${ApiServices.baseUrl}/chats/create/"),
+      Uri.parse("${ApiServices.baseUrl}/chats/createChat"),
       headers: {
         "Content-Type": "application/json",
       },
