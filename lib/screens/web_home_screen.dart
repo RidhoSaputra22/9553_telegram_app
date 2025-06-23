@@ -311,8 +311,8 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                                           contentPadding:
                                               const EdgeInsets.symmetric(
                                                   horizontal: 16, vertical: 8),
-                                          leading: chat.avatarUrl?.isNotEmpty ??
-                                                  false
+                                          leading: selectedChat!.avatarUrl !=
+                                                  null
                                               ? CircleAvatar(
                                                   radius: 30,
                                                   backgroundImage: NetworkImage(
@@ -414,7 +414,7 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                                     ),
                                     child: Row(
                                       children: [
-                                        selectedChat!.avatarUrl!.isNotEmpty
+                                        selectedChat!.avatarUrl != null
                                             ? CircleAvatar(
                                                 radius: 20,
                                                 backgroundImage: NetworkImage(
