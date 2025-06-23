@@ -227,16 +227,22 @@ class _HomeScreenState extends State<HomeScreen> {
           : chats.isEmpty
               ? const Center(child: Text('No Chats'))
               : selectedChat == null
-                  ? ListView.builder(
-                      itemCount: chats.length,
-                      itemBuilder: (context, index) => GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedChatIndex = index;
-                            selectedChat = chats[index];
-                          });
-                        },
-                        child: _buildChatItem(chats[index]),
+                  ? RefreshIndicator(
+                      onRefresh: () async {
+                        _loadChats();
+                        setState(() {});
+                      },
+                      child: ListView.builder(
+                        itemCount: chats.length,
+                        itemBuilder: (context, index) => GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedChatIndex = index;
+                              selectedChat = chats[index];
+                            });
+                          },
+                          child: _buildChatItem(chats[index]),
+                        ),
                       ),
                     )
                   : Column(
@@ -252,73 +258,82 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Column(
                               children: [
                                 Expanded(
-                                    child: ListView.builder(
-                                  reverse: true,
-                                  itemCount: selectedChat!.message!.length,
-                                  itemBuilder: (context, index) {
-                                    final msg = selectedChat!.message![
-                                        selectedChat!.message!.length -
-                                            index -
-                                            1];
-                                    return Align(
-                                      alignment: msg.user_id == userId
-                                          ? Alignment.centerRight
-                                          : Alignment.centerLeft,
-                                      child: Container(
-                                        margin: const EdgeInsets.symmetric(
-                                            vertical: 6),
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10, horizontal: 14),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
+                                    child: RefreshIndicator(
+                                  onRefresh: () async {
+                                    _loadChats();
+                                    setState(() {});
+                                  },
+                                  child: ListView.builder(
+                                    reverse: true,
+                                    itemCount: selectedChat!.message!.length,
+                                    itemBuilder: (context, index) {
+                                      final msg = selectedChat!.message![
+                                          selectedChat!.message!.length -
+                                              index -
+                                              1];
+                                      return Align(
+                                        alignment: msg.user_id == userId
+                                            ? Alignment.centerRight
+                                            : Alignment.centerLeft,
                                         child: Container(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              msg.photo != null
-                                                  ? Container(
-                                                      width: 300,
-                                                      height: 300,
-                                                      decoration: BoxDecoration(
-                                                        image: DecorationImage(
-                                                          image: NetworkImage(
-                                                              msg.photo!),
-                                                          fit: BoxFit.contain,
+                                          margin: const EdgeInsets.symmetric(
+                                              vertical: 6),
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 10, horizontal: 14),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: Container(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              children: [
+                                                msg.photo != null
+                                                    ? Container(
+                                                        width: 300,
+                                                        height: 300,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          image:
+                                                              DecorationImage(
+                                                            image: NetworkImage(
+                                                                msg.photo!),
+                                                            fit: BoxFit.contain,
+                                                          ),
                                                         ),
-                                                      ),
-                                                    )
-                                                  : SizedBox(height: 0),
-                                              Text(
-                                                msg.content ?? '',
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16,
+                                                      )
+                                                    : SizedBox(height: 0),
+                                                Text(
+                                                  msg.content ?? '',
+                                                  style: const TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 16,
+                                                  ),
                                                 ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                msg.time!.day.toString() +
-                                                    '/' +
-                                                    msg.time!.month.toString() +
-                                                    '/' +
-                                                    msg.time!.year.toString(),
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 12,
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  msg.time!.day.toString() +
+                                                      '/' +
+                                                      msg.time!.month
+                                                          .toString() +
+                                                      '/' +
+                                                      msg.time!.year.toString(),
+                                                  style: const TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 12,
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  },
+                                      );
+                                    },
+                                  ),
                                 )),
                               ],
                             ),
