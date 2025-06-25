@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:telegram_clone/main.dart';
 import 'package:telegram_clone/models/message.dart';
 import 'package:telegram_clone/providers/auth.dart';
 
@@ -26,7 +27,6 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   final TextEditingController _addChatController = TextEditingController();
-  final TextEditingController _addChatNameController = TextEditingController();
 
   FilePickerResult? _pickedFile;
 
@@ -34,6 +34,7 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
   bool isLoading = true;
   List<Chat> chats = [];
   Chat? selectedChat;
+  String? selectedChatName;
 
   String? userId;
 
@@ -46,6 +47,12 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
       isLoading = false;
       chats = _chats;
       selectedChat = _chats[0];
+      selectedChatName =
+          selectedChat?.isGroup != null && selectedChat!.isGroup! == 1
+              ? selectedChat!.name
+              : userId == selectedChat?.members![0].id.toString()
+                  ? selectedChat?.members![1].name
+                  : selectedChat?.members![0].name;
     });
   }
 
@@ -225,13 +232,21 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                                               ),
                                             ),
                                             PopupMenuItem(
+                                              onTap: () {
+                                                AuthServices.logout();
+                                                Navigator.pushReplacement(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const HomePage()));
+                                              },
                                               child: Row(
                                                 children: [
-                                                  const Icon(Icons.more_horiz,
+                                                  const Icon(Icons.logout,
                                                       color: Colors.white),
                                                   const SizedBox(width: 12),
                                                   const Text(
-                                                    'More',
+                                                    'Logout',
                                                     style: TextStyle(
                                                         color: Colors.white),
                                                   ),
@@ -297,6 +312,13 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                                   itemCount: chats.length,
                                   itemBuilder: (context, index) {
                                     final Chat chat = chats[index];
+                                    String chatName = chat.isGroup != null &&
+                                            chat.isGroup! == 1
+                                        ? chat.name!
+                                        : userId ==
+                                                chat.members![0].id.toString()
+                                            ? chat.members![1].name!
+                                            : chat.members![0].name!;
 
                                     return Padding(
                                         padding: const EdgeInsets.symmetric(
@@ -306,6 +328,20 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                                           onTap: () {
                                             setState(() {
                                               selectedChat = chat;
+                                              selectedChatName = selectedChat
+                                                              ?.isGroup !=
+                                                          null &&
+                                                      selectedChat!.isGroup! ==
+                                                          1
+                                                  ? selectedChat!.name
+                                                  : userId ==
+                                                          selectedChat
+                                                              ?.members![0].id
+                                                              .toString()
+                                                      ? selectedChat
+                                                          ?.members![1].name
+                                                      : selectedChat
+                                                          ?.members![0].name;
                                             });
                                           },
                                           contentPadding:
@@ -321,7 +357,7 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                                               : CircleAvatar(
                                                   radius: 30,
                                                   child: Text(
-                                                    chat.name?[0] ?? '',
+                                                    chatName[0],
                                                     style: const TextStyle(
                                                         color: Colors.white,
                                                         fontSize: 20),
@@ -331,11 +367,10 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                                             children: [
                                               Expanded(
                                                 child: Text(
-                                                  chat.name ?? '',
+                                                  chatName,
                                                   style: const TextStyle(
                                                       color: Colors.white,
-                                                      fontSize:
-                                                          16), // Mengubah dari 14 ke 16
+                                                      fontSize: 16),
                                                 ),
                                               ),
                                             ],
@@ -423,7 +458,7 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                                             : CircleAvatar(
                                                 radius: 20,
                                                 child: Text(
-                                                  selectedChat!.name![0],
+                                                  selectedChatName![0],
                                                   style: const TextStyle(
                                                       color: Colors.white),
                                                 ),
@@ -435,7 +470,7 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                selectedChat!.name!,
+                                                selectedChatName!,
                                                 style: const TextStyle(
                                                     color: Colors.white,
                                                     fontSize: 16),
@@ -747,14 +782,6 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                         ),
                         const SizedBox(height: 16),
                         TextField(
-                          controller: _addChatNameController,
-                          decoration: InputDecoration(
-                            labelText: 'Nama',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
                           controller: _addChatController,
                           decoration: InputDecoration(
                             labelText: 'No Hp',
@@ -779,8 +806,7 @@ class _WebHomeScreenState extends State<WebHomeScreen> {
                             foregroundColor: Colors.white,
                           ),
                           onPressed: () async {
-                            await Chat.addChat(_addChatController.text,
-                                _addChatNameController.text);
+                            await Chat.addChat(_addChatController.text);
 
                             Navigator.pop(context);
                           },

@@ -16,11 +16,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _addChatController = TextEditingController();
-  final TextEditingController _addChatNameController = TextEditingController();
 
   List<Chat> chats = [];
   bool isLoading = true;
   Chat? selectedChat;
+  String? selectedChatName;
+
   int? selectedChatIndex;
   final TextEditingController messageController = TextEditingController();
 
@@ -44,6 +45,12 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading = false;
       selectedChat =
           selectedChatIndex != null ? chats[selectedChatIndex!] : null;
+      selectedChatName =
+          selectedChat?.isGroup != null && selectedChat!.isGroup! == 1
+              ? selectedChat!.name
+              : userId == selectedChat?.members![0].id.toString()
+                  ? selectedChat?.members![1].name
+                  : selectedChat?.members![0].name;
     });
   }
 
@@ -62,6 +69,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildChatItem(Chat chat) {
+    String chatName = chat.isGroup != null && chat.isGroup! == 1
+        ? chat.name!
+        : userId == chat.members![0].id.toString()
+            ? chat.members![1].name!
+            : chat.members![0].name!;
+
     return Container(
       padding: const EdgeInsets.symmetric(
         vertical: 8,
@@ -75,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
             : CircleAvatar(
                 radius: 25,
                 child: Text(
-                  chat.name?[0] ?? '',
+                  chatName[0],
                   style: const TextStyle(color: Colors.white, fontSize: 20),
                 ),
               ),
@@ -83,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: Text(
-                chat.name ?? '',
+                chatName,
                 style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
@@ -120,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         : null,
                     child: selectedChat!.avatarUrl == null
                         ? Text(
-                            selectedChat?.name?[0] ?? '',
+                            selectedChatName?[0] ?? '',
                             style: const TextStyle(color: Colors.white),
                           )
                         : null,
@@ -128,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      selectedChat?.name ?? '',
+                      selectedChatName ?? '',
                       style: const TextStyle(color: Colors.white),
                     ),
                   ),
@@ -239,6 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             setState(() {
                               selectedChatIndex = index;
                               selectedChat = chats[index];
+                              _loadChats();
                             });
                           },
                           child: _buildChatItem(chats[index]),
@@ -267,10 +281,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                     reverse: true,
                                     itemCount: selectedChat!.message!.length,
                                     itemBuilder: (context, index) {
-                                      final msg = selectedChat!.message![
-                                          selectedChat!.message!.length -
-                                              index -
-                                              1];
+                                      final msg =
+                                          selectedChat!.message!.length > 0
+                                              ? selectedChat!.message![
+                                                  selectedChat!
+                                                          .message!.length -
+                                                      index -
+                                                      1]
+                                              : selectedChat!.message![index];
                                       return Align(
                                         alignment: msg.user_id == userId
                                             ? Alignment.centerRight
@@ -489,14 +507,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 16),
                         TextField(
-                          controller: _addChatNameController,
-                          decoration: InputDecoration(
-                            labelText: 'Nama',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
                           controller: _addChatController,
                           decoration: InputDecoration(
                             labelText: 'No Hp',
@@ -522,10 +532,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           onPressed: () async {
                             try {
-                              await Chat.addChat(_addChatController.text,
-                                  _addChatNameController.text);
+                              await Chat.addChat(_addChatController.text);
                               _addChatController.clear();
-                              _addChatNameController.clear();
+
                               Navigator.pop(context);
                             } catch (e) {
                               Navigator.pop(context);

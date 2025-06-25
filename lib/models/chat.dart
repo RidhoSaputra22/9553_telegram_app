@@ -10,13 +10,38 @@ import 'package:telegram_clone/config/api.dart';
 import 'package:telegram_clone/models/message.dart';
 import 'package:telegram_clone/providers/auth.dart';
 
+class Members {
+  final String? name;
+  final int? id;
+
+  Members({
+    required this.name,
+    required this.id,
+  });
+
+  factory Members.fromJson(Map<String, dynamic> json) {
+    return Members(
+      name: json['name'] ?? null,
+      id: json['id'] ?? null,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'id': id,
+      };
+}
+
 class Chat {
   final int id;
   final String? name;
   final String? subtitle;
   final String? time;
   final String? avatarUrl;
+  final int? isGroup;
+
   final List<Message>? message;
+  final List<Members>? members;
 
   Chat({
     required this.id,
@@ -24,7 +49,9 @@ class Chat {
     required this.subtitle,
     required this.time,
     required this.avatarUrl,
+    required this.isGroup,
     required this.message,
+    required this.members,
   });
 
   factory Chat.fromJson(Map<String, dynamic> json) {
@@ -34,9 +61,14 @@ class Chat {
       subtitle: json['subtitle'] ?? null,
       time: json['time'] ?? null,
       avatarUrl: json['avatarUrl'] ?? null,
+      isGroup: json['is_group'] ?? null,
       message: json['messages'] != null
           ? List<Message>.from(
               json['messages'].map((msg) => Message.fromJson(msg)))
+          : null,
+      members: json['members'] != null
+          ? List<Members>.from(
+              json['members'].map((member) => Members.fromJson(member)))
           : null,
     );
   }
@@ -47,7 +79,9 @@ class Chat {
         'subtitle': subtitle,
         'time': time,
         'avatarUrl': avatarUrl,
+        'is_group': isGroup,
         'message': message,
+        'members': members,
       };
 
   static Future<List<Chat>> fetch() async {
@@ -68,7 +102,7 @@ class Chat {
     }
   }
 
-  static Future<void> addChat(String phone, String nama) async {
+  static Future<void> addChat(String phone) async {
     final String? userId = await AuthServices.getUserId();
     final response = await http.post(
       Uri.parse("${ApiServices.baseUrl}/chats/createChat"),
@@ -78,7 +112,6 @@ class Chat {
       body: jsonEncode({
         "phone": phone,
         "user_id": userId!,
-        "name": nama,
       }),
     );
 
